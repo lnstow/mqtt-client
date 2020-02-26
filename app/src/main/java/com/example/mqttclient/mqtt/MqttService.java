@@ -51,8 +51,12 @@ public class MqttService extends Service {
     public class MqttBinder extends Binder {
 
         public void reConnect() {
-            disConnect();
-            connect(MqttParametersManager.readConfig(MqttService.this));
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    connect(MqttParametersManager.readConfig(MqttService.this));
+                }
+            }).start();
         }
 
         public boolean isConnected() {
@@ -87,11 +91,10 @@ public class MqttService extends Service {
             return;
         }
 
-        if (client == null) {
-            // uri:协议+地址+端口号
-            client = new MqttAndroidClient(this, parameters.uri, parameters.clientId);
-            client.setCallback(mqttCallback);// 设置MQTT监听并且接受消息
-        }
+        disConnect();
+
+        client = new MqttAndroidClient(this, parameters.getUri(), parameters.clientId);
+        client.setCallback(mqttCallback);// 设置MQTT监听并且接受消息
 
         conOpt.setCleanSession(true);// 清除缓存
         conOpt.setConnectionTimeout(10);// 设置超时时间，单位：秒
@@ -117,7 +120,7 @@ public class MqttService extends Service {
     }
 
     private void disConnect() {
-        if (client != null) {
+        if (client != null && client.isConnected()) {
             try {
                 client.disconnect();
             } catch (MqttException e) {

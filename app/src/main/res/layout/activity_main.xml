@@ -20,18 +20,9 @@
         android:layout_height="wrap_content"/>
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="发布主题"/>
-    <Button
         android:id="@+id/settings_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="设置"/>
-    <Button
-        android:id="@+id/connect_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="未连接"/>
+
 </LinearLayout>

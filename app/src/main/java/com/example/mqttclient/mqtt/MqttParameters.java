@@ -1,20 +1,22 @@
 package com.example.mqttclient.mqtt;
 
 public class MqttParameters {
-    public String uri;
+    public String serverIp;
+    public String port;
     public String clientId;
     public String userName;
     public String passWord;
 
-    public MqttParameters(String uri, String clientId, String userName, String passWord) {
-        this.uri = uri;
+    public MqttParameters(String serverIp, String port, String clientId, String userName, String passWord) {
+        this.serverIp = serverIp;
+        this.port = port;
         this.clientId = clientId;
         this.userName = userName;
         this.passWord = passWord;
     }
 
-    public void setUri(String uri) {
-        this.uri = uri;
+    public String getUri(){
+        return "tcp://"+serverIp+":"+port;
     }
 
     public void setClientId(String clientId) {
@@ -27,10 +29,6 @@ public class MqttParameters {
 
     public void setPassWord(String passWord) {
         this.passWord = passWord;
-    }
-
-    public String getUri() {
-        return uri;
     }
 
     public String getClientId() {

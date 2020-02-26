@@ -50,30 +50,20 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
         et = findViewById(R.id.input);
         connectState = findViewById(R.id.connect_state);
 
-        final Intent intent = new Intent(this, MqttService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        Intent mqttServiceIntent = new Intent(this, MqttService.class);
+        bindService(mqttServiceIntent, connection, Context.BIND_AUTO_CREATE);
 
         findViewById(R.id.settings_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    mqttBinder.publishMessage("/test", et.getText().toString());
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        findViewById(R.id.connect_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
             }
         });
     }
 
     void subscribeTopics(){
         try {
-            Toast.makeText(MainActivity.this, "connect ok", Toast.LENGTH_SHORT).show();
             mqttBinder.subscribe("/test");
         } catch (MqttException e) {
             e.printStackTrace();
@@ -102,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
 
     @Override
     public void onDeliveryComplete() {
-        //Toast.makeText(MainActivity.this, "publish ok", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "publish ok");
     }
 
@@ -114,7 +103,12 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
     @Override
     protected void onRestart() {
         super.onRestart();
-        subscribeTopics();
+        if(mqttBinder.isConnected()){
+            connectState.setText("已连接");
+            subscribeTopics();
+        } else {
+            connectState.setText("未连接");
+        }
     }
 
     @Override
