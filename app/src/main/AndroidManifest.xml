@@ -16,9 +16,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".ActorsActivity"></activity>
+        <activity android:name=".SensorsActivity" />
+        <activity android:name=".PubSubTestActivity" />
+        <activity android:name=".SettingsActivity" />
 
         <service
-            android:name=".MqttService"
+            android:name=".mqtt.MqttService"
             android:enabled="true"
             android:exported="true" />
 

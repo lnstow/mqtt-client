@@ -1,4 +1,4 @@
-package com.example.mqttclient;
+package com.example.mqttclient.mqtt;
 
 import android.app.Service;
 import android.content.Context;
@@ -12,6 +12,7 @@ import android.util.Log;
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -22,75 +23,67 @@ public class MqttService extends Service {
 
     public static final String TAG = MqttService.class.getSimpleName();
     private static MqttAndroidClient client;
-    private String host = "tcp://192.168.1.103:1883";
-    private MqttMessageCallBack mqttMessageCallBack;
+    private MqttEventCallBack mqttEventCallBack;
     private MqttBinder mqttBinder = new MqttBinder();
-    private boolean startConnectFlag = false;
     MqttConnectOptions conOpt = new MqttConnectOptions();
-
-    public MqttService() {
-    }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.e(getClass().getName(), "onCreate");
+        connect(MqttParametersManager.readConfig(MqttService.this));
     }
 
-    public interface MqttMessageCallBack {
-        void onMqttMessage(String message);
+    public interface MqttEventCallBack {
+        void onConnectSuccess();
+
+        void onConnectError(String error);
+
+        void onDeliveryComplete();
+
+        void onMqttMessage(String topic, String message);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.e(getClass().getName(), "onBind");
         return mqttBinder;
     }
 
-    class MqttBinder extends Binder {
-        public void startConnectMqttServer(IMqttActionListener iMqttActionListener, MqttParameters parameters) {
-            startConnectFlag = true;
-            connect(iMqttActionListener, parameters);
-        }
+    public class MqttBinder extends Binder {
 
-        public void disConnectMqttServer() {
-            startConnectFlag = false;
+        public void reConnect() {
             disConnect();
+            connect(MqttParametersManager.readConfig(MqttService.this));
         }
 
         public boolean isConnected() {
             return client != null && client.isConnected();
         }
 
-        public boolean subscribe(String topic) {
-            try {
+        public void subscribe(String topic) throws MqttException {
+            if (client != null && client.isConnected()) {
                 client.subscribe(topic, 1);
-                return true;
-            } catch (MqttException e) {
-                e.printStackTrace();
             }
-            return false;
         }
 
-        public boolean publishMessage(String topic, String message) {
-            try {
-                if (client != null) {
-                    client.publish(topic, message.getBytes(), 0, false);
-                    return true;
-                }
-            } catch (MqttException e) {
-                e.printStackTrace();
+        public void unSubscribe(String topic) throws MqttException {
+            if (client != null && client.isConnected()) {
+                client.unsubscribe(topic);
             }
-            return false;
         }
 
-        public void setMessageCallback(MqttMessageCallBack callback) {
-            mqttMessageCallBack = callback;
+        public void publishMessage(String topic, String message) throws MqttException {
+            if (client != null && client.isConnected()) {
+                client.publish(topic, message.getBytes(), 0, false);
+            }
+        }
+
+        public void setMqttEventCallback(MqttEventCallBack callback) {
+            mqttEventCallBack = callback;
         }
     }
 
-    private void connect(IMqttActionListener iMqttActionListener, MqttParameters parameters) {
-        if (!isNetworkReady()) {
+    private void connect(MqttParameters parameters) {
+        if (!isNetworkReady(this.getApplicationContext())) {
             return;
         }
 
@@ -140,48 +133,73 @@ public class MqttService extends Service {
         super.onDestroy();
     }
 
-    // MQTT监听并且接受消息
+    private IMqttActionListener iMqttActionListener = new IMqttActionListener() {
+
+        @Override
+        public void onSuccess(IMqttToken arg0) {
+            Log.i(TAG, "connect success");
+            if (mqttEventCallBack != null) {
+                mqttEventCallBack.onConnectSuccess();
+            }
+        }
+
+        @Override
+        public void onFailure(IMqttToken arg0, Throwable arg1) {
+            Log.i(TAG, "connect fail:" + arg1.toString());
+            if (mqttEventCallBack != null) {
+                mqttEventCallBack.onConnectError(arg1.toString());
+            }
+            mqttCallback.connectionLost(arg1);
+        }
+    };
+
     private MqttCallback mqttCallback = new MqttCallback() {
 
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
-
             String str1 = new String(message.getPayload());
-            if (mqttMessageCallBack != null) {
-                mqttMessageCallBack.onMqttMessage(str1);
+            if (mqttEventCallBack != null) {
+                mqttEventCallBack.onMqttMessage(topic, str1);
             }
-            String str2 = topic + ";qos:" + message.getQos() + ";retained:" + message.isRetained();
             Log.i(TAG, "messageArrived:" + str1);
-            Log.i(TAG, str2);
         }
 
         @Override
         public void deliveryComplete(IMqttDeliveryToken arg0) {
-
+            if (mqttEventCallBack != null) {
+                mqttEventCallBack.onDeliveryComplete();
+            }
         }
 
         @Override
         public void connectionLost(Throwable arg0) {
-            // 失去连接，重连
+            if (mqttEventCallBack != null) {
+                mqttEventCallBack.onConnectError("Connecting lost! MqttService will reconnect after 5s...");
+            }
+
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if (client != null && !client.isConnected()) {
+                try {
+                    client.connect(conOpt, null, iMqttActionListener);
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     };
 
-    /**
-     * 判断网络是否连接
-     */
-    private boolean isNetworkReady() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) this.getApplicationContext()
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+    public static boolean isNetworkReady(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = connectivityManager.getActiveNetworkInfo();
         if (info != null && info.isAvailable()) {
-            String name = info.getTypeName();
-            Log.i(TAG, "MQTT当前网络名称：" + name);
             return true;
         } else {
-            Log.i(TAG, "MQTT 没有可用网络");
             return false;
         }
     }
-
-
 }

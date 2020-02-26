@@ -12,14 +12,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
+import com.example.mqttclient.mqtt.MqttService;
 
-public class MainActivity extends AppCompatActivity implements MqttService.MqttMessageCallBack {
+import org.eclipse.paho.client.mqttv3.MqttException;
 
-    private TextView textView;
-    private EditText input;
+public class MainActivity extends AppCompatActivity implements MqttService.MqttEventCallBack {
+
+    private TextView tv, connectState;
+    private EditText et;
     private MqttService.MqttBinder mqttBinder;
     private String TAG = "MainActivity";
 
@@ -27,32 +29,15 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttM
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mqttBinder = (MqttService.MqttBinder)iBinder;
-            mqttBinder.setMessageCallback(MainActivity.this);
+            mqttBinder.setMqttEventCallback(MainActivity.this);
             if(mqttBinder.isConnected()){
-                //subscribe topics
-            } else {
-                mqttBinder.startConnectMqttServer(iMqttActionListener, MqttParametersManager.readConfig(MainActivity.this));
+                connectState.setText("已连接");
+                subscribeTopics();
             }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
-
-        }
-    };
-
-    private IMqttActionListener iMqttActionListener = new IMqttActionListener() {
-
-        @Override
-        public void onSuccess(IMqttToken arg0) {
-            Log.i(TAG, "连接成功 ");
-            //subscribe topics
-            mqttBinder.subscribe("/test");
-        }
-
-        @Override
-        public void onFailure(IMqttToken arg0, Throwable arg1) {
-            Log.i(TAG, "connect fail:"+arg1.toString());
         }
     };
 
@@ -60,23 +45,82 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttM
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textView = findViewById(R.id.text);
-        input = findViewById(R.id.input);
+
+        tv = findViewById(R.id.text);
+        et = findViewById(R.id.input);
+        connectState = findViewById(R.id.connect_state);
 
         final Intent intent = new Intent(this, MqttService.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
-        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.settings_btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mqttBinder.publishMessage("/test", input.getText().toString());
+                try {
+                    mqttBinder.publishMessage("/test", et.getText().toString());
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        findViewById(R.id.connect_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
     }
 
+    void subscribeTopics(){
+        try {
+            Toast.makeText(MainActivity.this, "connect ok", Toast.LENGTH_SHORT).show();
+            mqttBinder.subscribe("/test");
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void unSubscribeTopics(){
+        try {
+            mqttBinder.unSubscribe("/test");
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
-    public void onMqttMessage(String message) {
-        textView.setText(message);
+    public void onConnectSuccess() {
+        subscribeTopics();
+        connectState.setText("已连接");
+    }
+
+    @Override
+    public void onConnectError(String error) {
+        Log.d(TAG, "onConnectError: "+error);
+        connectState.setText("未连接");
+    }
+
+    @Override
+    public void onDeliveryComplete() {
+        //Toast.makeText(MainActivity.this, "publish ok", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "publish ok");
+    }
+
+    @Override
+    public void onMqttMessage(String topic, String message) {
+        tv.setText(topic+":"+message);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        subscribeTopics();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unSubscribeTopics();
     }
 
     @Override

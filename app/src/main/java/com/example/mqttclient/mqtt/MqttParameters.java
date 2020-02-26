@@ -1,4 +1,4 @@
-package com.example.mqttclient;
+package com.example.mqttclient.mqtt;
 
 public class MqttParameters {
     public String uri;

@@ -1,9 +1,10 @@
-package com.example.mqttclient;
+package com.example.mqttclient.mqtt;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
 public class MqttParametersManager {
+
     public static void saveConfig(Context context, MqttParameters parameters){
         SharedPreferences.Editor editor = context.getSharedPreferences("MqttParameters", Context.MODE_PRIVATE).edit();
         editor.putString("uri", parameters.uri);
@@ -15,8 +16,8 @@ public class MqttParametersManager {
 
     public static MqttParameters readConfig(Context context){
         SharedPreferences preferences = context.getSharedPreferences("MqttParameters", Context.MODE_PRIVATE);
-        return new MqttParameters(preferences.getString("uri", "")
-        ,preferences.getString("clientId", "")
+        return new MqttParameters(preferences.getString("uri", "tcp://192.168.1.103:1883")
+        ,preferences.getString("clientId", "clientAndroid")
         ,preferences.getString("userName", "")
         ,preferences.getString("passWord", ""));
     }
