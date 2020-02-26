@@ -9,20 +9,16 @@
         android:layout_height="wrap_content"
         android:text="未连接"/>
 
-    <TextView
-        android:id="@+id/text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <EditText
-        android:id="@+id/input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
     <Button
         android:id="@+id/settings_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="设置"/>
-
+        android:text="设置"
+        android:textSize="20sp"/>
+    <Button
+        android:id="@+id/pubsub_test_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="测试发布订阅"
+        android:textSize="20sp"/>
 </LinearLayout>

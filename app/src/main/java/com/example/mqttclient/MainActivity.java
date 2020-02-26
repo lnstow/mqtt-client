@@ -10,9 +10,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.mqttclient.mqtt.MqttService;
 
@@ -20,8 +18,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class MainActivity extends AppCompatActivity implements MqttService.MqttEventCallBack {
 
-    private TextView tv, connectState;
-    private EditText et;
+    private TextView connectState;
     private MqttService.MqttBinder mqttBinder;
     private String TAG = "MainActivity";
 
@@ -46,8 +43,6 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tv = findViewById(R.id.text);
-        et = findViewById(R.id.input);
         connectState = findViewById(R.id.connect_state);
 
         Intent mqttServiceIntent = new Intent(this, MqttService.class);
@@ -57,6 +52,14 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        findViewById(R.id.pubsub_test_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, PubSubTestActivity.class);
                 startActivity(intent);
             }
         });
@@ -97,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
 
     @Override
     public void onMqttMessage(String topic, String message) {
-        tv.setText(topic+":"+message);
     }
 
     @Override
