@@ -87,15 +87,10 @@ public class MqttService extends Service {
     }
 
     private void connect(MqttParameters parameters) {
-        if (!isNetworkReady(this.getApplicationContext())) {
-            return;
-        }
-
         disConnect();
 
         client = new MqttAndroidClient(this, parameters.getUri(), parameters.clientId);
         client.setCallback(mqttCallback);// 设置MQTT监听并且接受消息
-
         conOpt.setCleanSession(true);// 清除缓存
         conOpt.setConnectionTimeout(10);// 设置超时时间，单位：秒
         conOpt.setKeepAliveInterval(20);// 心跳包发送间隔，单位：秒
@@ -113,8 +108,9 @@ public class MqttService extends Service {
         }
 
         try {
-            if(!client.isConnected())
-            client.connect(conOpt, null, iMqttActionListener);
+            if(!client.isConnected()){
+                client.connect(conOpt, null, iMqttActionListener);
+            }
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -177,6 +173,7 @@ public class MqttService extends Service {
 
         @Override
         public void connectionLost(Throwable arg0) {
+            Log.i(TAG, "connectionLost:" + arg0.toString());
             if (mqttEventCallBack != null) {
                 mqttEventCallBack.onConnectError("Connecting lost! MqttService will reconnect after 5s...");
             }
