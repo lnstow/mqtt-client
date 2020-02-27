@@ -113,6 +113,7 @@ public class MqttService extends Service {
         }
 
         try {
+            if(!client.isConnected())
             client.connect(conOpt, null, iMqttActionListener);
         } catch (MqttException e) {
             e.printStackTrace();

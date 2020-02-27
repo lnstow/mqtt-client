@@ -20,8 +20,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class PubSubTestActivity extends AppCompatActivity implements MqttService.MqttEventCallBack {
 
-    private EditText topicPublish, topicSubscribe, messagePublish, messaageRecv;
-    private TextView connectState;
+    private EditText topicPublish, topicSubscribe, messagePublish;
+    private TextView connectState, messaageRecv;
     private MqttService.MqttBinder mqttBinder;
     private String TAG = "PubSubTestActivity";
     private String lastSubscribeTopic = null;
@@ -48,7 +48,7 @@ public class PubSubTestActivity extends AppCompatActivity implements MqttService
         topicPublish = findViewById(R.id.topic_publish_et);
         topicSubscribe = findViewById(R.id.topic_sub_et);
         messagePublish = findViewById(R.id.message_publish_et);
-        messaageRecv = findViewById(R.id.message_recv_et);
+        messaageRecv = findViewById(R.id.message_recv_tv);
         connectState = findViewById(R.id.pubsub_connect_state);
 
         Intent mqttServiceIntent = new Intent(this, MqttService.class);
