@@ -13,22 +13,28 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.mqttclient.mqtt.MqttService;
 import com.example.mqttclient.protocol.AirConditioningMessage;
 import com.example.mqttclient.protocol.BoolMessage;
+import com.example.mqttclient.protocol.FloatMessage;
+import com.example.mqttclient.protocol.IntMessage;
 import com.google.gson.Gson;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class DevicesDemoActivity extends AppCompatActivity implements MqttService.MqttEventCallBack, CompoundButton.OnCheckedChangeListener {
 
-    private TextView connectState;
+    private TextView connectState, temperatureValue, humidityValue, pmValue, gasValue, doorStatus;
     private EditText airCconditioningValue;
     private MqttService.MqttBinder mqttBinder;
     private String TAG = "MainActivity";
     private Switch parlourLightSwitch, curtain_switch, fan_socket_switch, air_conditioning_switch;
+    private Map<String, Integer> subscribeTopics = new HashMap<>();
+
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -57,8 +63,14 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
         Intent mqttServiceIntent = new Intent(this, MqttService.class);
         bindService(mqttServiceIntent, connection, Context.BIND_AUTO_CREATE);
 
-        airCconditioningValue = findViewById(R.id.air_conditioning_value);
+        temperatureValue = findViewById(R.id.temperature_value);
 
+        humidityValue = findViewById(R.id.humidity_value);
+        pmValue = findViewById(R.id.pm_value);
+        gasValue = findViewById(R.id.gas_value);
+        doorStatus = findViewById(R.id.door_status);
+
+        airCconditioningValue = findViewById(R.id.air_conditioning_value);
         parlourLightSwitch = findViewById(R.id.parlour_light_switch);
         parlourLightSwitch.setOnCheckedChangeListener(this);
         curtain_switch = findViewById(R.id.curtain_switch);
@@ -136,11 +148,14 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
 
     void subscribeTopics() {
         try {
-            mqttBinder.subscribe("/test/temp");
-            mqttBinder.subscribe("/test/hum");
-            mqttBinder.subscribe("/test/pm");
-            mqttBinder.subscribe("/test/gas");
-            mqttBinder.subscribe("/test/door");
+            subscribeTopics.put("/test/temp",1);
+            subscribeTopics.put("/test/hum", 2);
+            subscribeTopics.put("/test/pm",3);
+            subscribeTopics.put("/test/gas",4);
+            subscribeTopics.put("/test/door",5);
+            for(Map.Entry<String, Integer> entry : subscribeTopics.entrySet()){
+                mqttBinder.subscribe(entry.getKey());
+            }
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -148,11 +163,10 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
 
     void unSubscribeTopics() {
         try {
-            mqttBinder.unSubscribe("/test/temp");
-            mqttBinder.unSubscribe("/test/hum");
-            mqttBinder.unSubscribe("/test/pm");
-            mqttBinder.unSubscribe("/test/gas");
-            mqttBinder.unSubscribe("/test/door");
+            for(Map.Entry<String, Integer> entry : subscribeTopics.entrySet()){
+                mqttBinder.unSubscribe(entry.getKey());
+            }
+            subscribeTopics.clear();
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -177,6 +191,30 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
 
     @Override
     public void onMqttMessage(String topic, String message) {
+        Log.d("onMqttMessage", "topic:"+topic+ "message length:"+ message.length() + ", message:"+message);
+        Gson gson = new Gson();
+        switch (subscribeTopics.get(topic)){
+            case 1:
+                temperatureValue.setText(String.valueOf(gson.fromJson(message.trim(), FloatMessage.class).value));
+                break;
+
+            case 2:
+                humidityValue.setText(String.valueOf(gson.fromJson(message.trim(), IntMessage.class).value));
+                break;
+
+            case 3:
+                pmValue.setText(String.valueOf(gson.fromJson(message.trim(), IntMessage.class).value));
+                break;
+
+            case 4:
+                gasValue.setText(String.valueOf(gson.fromJson(message.trim(), IntMessage.class).value));
+                break;
+
+            case 5:
+                String status = gson.fromJson(message.trim(), BoolMessage.class).value ?"开":"关";
+                doorStatus.setText(status);
+                break;
+        }
     }
 
     @Override
