@@ -21,4 +21,10 @@
         android:layout_height="wrap_content"
         android:text="测试发布订阅"
         android:textSize="20sp"/>
+    <Button
+        android:id="@+id/dev_demo_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="示例设备"
+        android:textSize="20sp"/>
 </LinearLayout>

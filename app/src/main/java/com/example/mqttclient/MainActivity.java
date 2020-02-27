@@ -30,6 +30,8 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
             if(mqttBinder.isConnected()){
                 connectState.setText("已连接");
                 subscribeTopics();
+            } else {
+                connectState.setText("未连接");
             }
         }
 
@@ -60,6 +62,14 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, PubSubTestActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        findViewById(R.id.dev_demo_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, DevicesDemoActivity.class);
                 startActivity(intent);
             }
         });

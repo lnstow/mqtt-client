@@ -33,6 +33,8 @@ public class PubSubTestActivity extends AppCompatActivity implements MqttService
             mqttBinder.setMqttEventCallback(PubSubTestActivity.this);
             if(mqttBinder.isConnected()){
                 connectState.setText("已连接");
+            } else {
+                connectState.setText("未连接");
             }
         }
 
