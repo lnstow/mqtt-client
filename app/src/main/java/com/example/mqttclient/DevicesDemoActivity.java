@@ -182,6 +182,7 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
     public void onConnectError(String error) {
         Log.d(TAG, "onConnectError: " + error);
         connectState.setText("未连接");
+        subscribeTopics.clear();
     }
 
     @Override
