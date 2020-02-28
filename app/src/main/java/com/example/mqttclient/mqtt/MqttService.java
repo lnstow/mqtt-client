@@ -173,7 +173,6 @@ public class MqttService extends Service {
 
         @Override
         public void connectionLost(Throwable arg0) {
-            Log.i(TAG, "connectionLost:" + arg0.toString());
             if (mqttEventCallBack != null) {
                 mqttEventCallBack.onConnectError("Connecting lost! MqttService will reconnect after 5s...");
             }
