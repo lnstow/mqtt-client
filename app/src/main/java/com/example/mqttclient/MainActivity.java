@@ -16,6 +16,8 @@ import com.example.mqttclient.mqtt.MqttService;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import java.util.concurrent.TimeUnit;
+
 public class MainActivity extends AppCompatActivity implements MqttService.MqttEventCallBack {
 
     private TextView connectState;
@@ -120,12 +122,27 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
     @Override
     protected void onRestart() {
         super.onRestart();
-        if(mqttBinder.isConnected()){
-            connectState.setText("已连接");
-            subscribeTopics();
-        } else {
-            connectState.setText("未连接");
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(mqttBinder.isConnected()){
+                            connectState.setText("已连接");
+                            subscribeTopics();
+                        } else {
+                            connectState.setText("未连接");
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override

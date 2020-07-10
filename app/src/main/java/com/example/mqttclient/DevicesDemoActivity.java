@@ -105,9 +105,9 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
             public void onClick(View v) {
                 boolean open=parlourLightSwitch.isChecked();
                 if (open)
-                    image2.setImageResource(R.drawable.ic_wb_incandescent_black_24dp);
-                else
                     image2.setImageResource(R.drawable.ic_lightbulb_outline_black_24dp);
+                else
+                    image2.setImageResource(R.drawable.ic_wb_incandescent_black_24dp);
                 parlourLightSwitch.setChecked(!open);
             }
         });
