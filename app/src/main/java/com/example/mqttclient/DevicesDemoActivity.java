@@ -9,8 +9,12 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -34,6 +38,7 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
     private String TAG = "MainActivity";
     private Switch parlourLightSwitch, curtain_switch, fan_socket_switch, air_conditioning_switch;
     private Map<String, Integer> subscribeTopics = new HashMap<>();
+    private ImageView image1,image2;
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -79,6 +84,33 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
         fan_socket_switch.setOnCheckedChangeListener(this);
         air_conditioning_switch = findViewById(R.id.air_conditioning_switch);
         air_conditioning_switch.setOnCheckedChangeListener(this);
+
+        image1=findViewById(R.id.image1);
+        image2=findViewById(R.id.image2);
+        final Animation animation= AnimationUtils.loadAnimation(this, R.anim.rotate);
+        animation.setFillAfter(true);
+        image1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean open=fan_socket_switch.isChecked();
+                if (open)
+                    image1.clearAnimation();
+                else
+                    image1.startAnimation(animation);
+                fan_socket_switch.setChecked(!open);
+            }
+        });
+        image2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean open=parlourLightSwitch.isChecked();
+                if (open)
+                    image2.setImageResource(R.drawable.ic_wb_incandescent_black_24dp);
+                else
+                    image2.setImageResource(R.drawable.ic_lightbulb_outline_black_24dp);
+                parlourLightSwitch.setChecked(!open);
+            }
+        });
     }
 
     @Override
@@ -216,6 +248,7 @@ public class DevicesDemoActivity extends AppCompatActivity implements MqttServic
                 doorStatus.setText(status);
                 break;
         }
+
     }
 
     @Override

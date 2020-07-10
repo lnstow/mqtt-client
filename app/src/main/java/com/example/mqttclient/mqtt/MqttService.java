@@ -173,23 +173,28 @@ public class MqttService extends Service {
 
         @Override
         public void connectionLost(Throwable arg0) {
-            if (mqttEventCallBack != null) {
-                mqttEventCallBack.onConnectError("Connecting lost! MqttService will reconnect after 5s...");
-            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mqttEventCallBack != null) {
+                        mqttEventCallBack.onConnectError("Connecting lost! MqttService will reconnect after 5s...");
+                    }
 
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
-            if (client != null && !client.isConnected()) {
-                try {
-                    client.connect(conOpt, null, iMqttActionListener);
-                } catch (MqttException e) {
-                    e.printStackTrace();
+                    if (client != null && !client.isConnected()) {
+                        try {
+                            client.connect(conOpt, null, iMqttActionListener);
+                        } catch (MqttException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
-            }
+            }).start();
         }
     };
 

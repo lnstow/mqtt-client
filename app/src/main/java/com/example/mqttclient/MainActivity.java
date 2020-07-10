@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
     void unSubscribeTopics(){
         try {
             mqttBinder.unSubscribe("/test");
-        } catch (MqttException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -100,7 +100,12 @@ public class MainActivity extends AppCompatActivity implements MqttService.MqttE
     @Override
     public void onConnectError(String error) {
         Log.d(TAG, "onConnectError: "+error);
-        connectState.setText("未连接");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                connectState.setText("未连接");
+            }
+        });
     }
 
     @Override
